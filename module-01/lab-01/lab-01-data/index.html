@@ -2,7 +2,6 @@
 <html>
 
 <head>
-    <meta charset=utf-8 />
     <title>2010 US Census Housing Data</title>
     <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
 
@@ -21,36 +20,33 @@
             font-family: Lato, sans-serif;
             color: #0D0000;
         }
-        
         header {
             width: 80%;
-            margin: 10px auto;
+            margin: 10px auto 10px auto;
+           
         }
-        
         h1 {
             display: inline-block;
             margin-right: 20px;
             color: #001323;
         }
-        
         h2 {
             display: inline-block;
             color: #001323;
         }
-        
         #map {
             width: 80%;
             height: 540px;
             margin: 10px auto;
-            background: #e9e2e2;
+            background: whitesmoke;
             border: 2px solid #dddedf;
         }
-        
         footer {
             width: 80%;
             margin: 10px auto;
+            
+            
         }
-        
         p {
             font-size: 1em;
             color: #001323;
@@ -59,172 +55,177 @@
         .legend {
             padding: 6px 8px;
             font-size: 1em;
-            background: rgba(255, 255, 255, 0.8);
+            background: rgba (255, 255, 255, 0.8);
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
-            border-radius: 5px;
+            border-radius:5px;
         }
-        
         .legend h3 {
             font-size: 1.1em;
             font-weight: normal;
             color: #001323;
             margin: 0 0 10px 0;
         }
-        
-        .legend span {
+        .legend span{
             width: 20px;
             height: 20px;
             float: left;
             margin: 0 10px 4px 0;
+            
         }
-        
         .legend label {
             font-size: 1.1em;
+            
         }
-        
         .legend label:after {
             content: '';
             display: block;
             clear: both;
         }
+        
+        
 
+        
     </style>
 </head>
 
 <body>
     <header>
-        <h1>Map Title</h1>
-        <h2>Map Subtitle</h2>
+    
+        
+        <h1>Kentucky Rental Properties by County</h1>
+        <h2>Percentages in 2010</h2>
     </header>
 
     <div id='map'></div>
 
     <footer>
-        <p>Map authored by Ray Hasenyager</p>
-        <p>This map uses 2010 US Census data to show by county housing units occupied by owners without a mortgage.</p>
-        <p>1. What is the purpose of the map?</p>
-        <p>To examine the rate and location of owner occupied housing units owned free and clear of a mortgage. I was curious if there would be a pattern and also what the rate of ownership is; the map does show a pattern. Not knowing much about Kentucky demographics I would assume looking at the patterns that the owner occupied counties have a higher percentage of older residents. While the lighter colored counties are those with younger populations or contain larger cities with poorer residents.</p>
-        <p>2. How does cartographic symbology influence or distort the representation of the data?</p>
-        <p>The symbology may distort interpretation of causation; i.e. correlation is not causation. I postulated reasons to investigate in response 1. One may try to use the data to advocate for social programs to increase home ownership in some areas, but then lead to a housing bubble later on. The map may actually be showing the effects of the housing bubble.</p>
-        <p>3. Does the map have a point of view or support an argument?</p>
-        <p>Yes, I believe its point of view is showing the effects of population demographics as it relates to owner occupied/mortgage free housing. Many of the lighter counties predominately contain larger cities and those with college campuses or military installations. The populations of these locations would be expected, in my experience, to be younger, transient, transitional, and poorer populations.</p>
+        <p>Map authored by Laura Brown</p>
+        <p>1. The purpose of this map is to illustrate a gradation of rental rates across the counties of Kentucky. It was calculated by dividing the number of rentals by the number of occupied properties. 2. The cartographic symbology is mostly impacted here by the calculation of clusters. Here, the Dark blue range is significantly greater (about 10 percentage points) from that of the other chloropleth groups. If you click on the counties, there are really only one or two that seem significantly higher than the rest of the middle ranges. For example, Christian County is 46.6%. 3. There is a certain interpretation in terms of social values and renting. Rentals are usually associated with lower income populations, though there are cases where that may not be true, such as university areas and urban areas.  There is also a tendency to map higher numbers as negative. A map of high rates of property ownership would look different than high rates of rentals, though the inverse map might actually be more interesting, speaking to either financial health or the prevalence of strong community lending agencies. </p>
     </footer>
 
+    
     <script>
-        $("h1").html("Mortgage Free Owner Occupied Housing Units in Kentucky");
-        $("h2").html("2010 US Census data");
 
-        var options = {
+       var options = {
             center: [37.8, -85.8],
-            zoom: 7.4,
+            zoom: 7.0,
             zoomControl: false
         }
-        var map = L.map('map', options);
-
-        var dataLayer,
-            attribute = "OWNED_FREE",
-            norm = "OWNER";
-            name = "NAME";
-
-        $.getJSON("ky_counties_housing.json", function(data) {
-
-            dataLayer = L.geoJson(data, {
-                style: function(feature) {
+      
+       var map = L.map('map', options);
+        
+       //var rentals = layer.feature.properties['RENTER']/layer.feature.properties['OCCUPIED']*100; : here I am having a hard time converting this to LocaleString within the popup command.  I want to use a variable, but I'm not sure where to put it.
+ 
+            
+     $.getJSON('ky_counties_housing.json', function(data){
+            
+            var dataLayer = L.geoJson(data,{
+                style : function(feature) {
                     return {
                         color: '#dddddd',
-                        weight: 1,
+                        weight: 2,
                         fillOpacity: 1,
                         fillColor: '#1f78b4'
-                    };
+                      };
                 }
             }).addTo(map);
-            
-            drawMap();
-            
+        
+         
+            drawMap(dataLayer);     
         });
-
-        function drawMap() {
-
-            var breaks = getClassBreaks();
+        
+       
+        function drawMap(dataLayer) {
             
-            dataLayer.eachLayer(function(layer) {
+            var breaks = getClassBreaks(dataLayer);
+            
+            //var rentals= layer.feature.properties['RENTER']/layer.feature.properties['OCCUPIED']*100
+            
+            dataLayer.eachLayer(function(layer){
                 layer.setStyle({
-                    fillColor: getColor(layer.feature.properties[attribute] / layer.feature.properties[norm], breaks)
+                    fillColor: 
+                    getColor(layer.feature.properties['RENTER']/layer.feature.properties['OCCUPIED'], breaks)
                 });
+                layer.bindPopup('<b>' + layer.feature.properties['NAME'] + ' County<br></b>'+ (100*layer.feature.properties['RENTER']/layer.feature.properties['OCCUPIED']) + "% Are Renters").openPopup();
             });
             
-            dataLayer.eachLayer(function(layer, dataLayer) {
-                layer.bindPopup('<b>' + layer.feature.properties[name] + ' County<br></b>' + attribute + ': ' + ((layer.feature.properties[attribute] / layer.feature.properties[norm])*100).toLocaleString() + '%')
-                });
-            
             drawLegend(breaks);
+            
+           
         }
-
-        map.addControl(L.control.zoom({
+         map.addControl(L.control.zoom({
             position: 'topright'
         }));
 
-        function drawLegend(breaks) {
+        
+        function getClassBreaks(dataLayer) {
+            var values = [];
+            
+            dataLayer.eachLayer(function(layer){
+              values.push(layer.feature.properties['RENTER']/layer.feature.properties['OCCUPIED']);  
+            });
+            
+       
+            
+            var clusters = ss.ckmeans(values, 5);
+            
+            var breaks= clusters.map(function(cluster){
+                return [cluster[0], cluster.pop()];
+            });
+            
+            return breaks;
+            
+        }
+            
+            
+        function getColor (d, breaks){
 
+            
+            if (d<=breaks[0][1]){
+                return '#f1eef6';
+            }else if (d <= breaks[1][1]){
+                return '#bdc9e1';
+            }else if (d <= breaks[2][1]){
+                return '#74a9cf';
+            }else if (d <= breaks[3][1]){
+                return '#2b8cbe';
+            }else if (d <= breaks[4][1]){
+                return '#045a8d';
+            }
+            
+        }
+    
+        function drawLegend(breaks){
+            
             var legend = L.control({
                 position: 'topleft'
             });
-
+            
             legend.onAdd = function() {
-
+                
                 var div = L.DomUtil.create('div', 'legend');
-
-                div.innerHTML = "<h3>" + attribute + " per " + norm + "</h3>";
-
-                for (var i = 0; i < breaks.length; i++) {
+                
+                div.innerHTML = "<h3> Percentage of Rentals in Occupied Houses</h3>";
+                
+                for(var i= 0; i < breaks.length; i++) {
                     var color = getColor(breaks[i][0], breaks);
-
-                    div.innerHTML +=
+                    
+                     div.innerHTML +=
                         '<span style="background:' + color + '"></span> ' +
                         '<label>' + (breaks[i][0] * 100).toLocaleString() + ' &mdash; ' +
-                        (breaks[i][1] * 100).toLocaleString() + '%</label>';
+                        (breaks[i][1] * 100).toLocaleString() + '</label>';
                 }
 
                 return div;
             };
-
-            legend.addTo(map);
+          legend.addTo(map);
+            
         }
 
-        function getClassBreaks() {
-            var values = [];
-
-            dataLayer.eachLayer(function(layer) {
-                var value = layer.feature.properties[attribute] / layer.feature.properties[norm];
-                values.push(value);
-            });
-
-            var clusters = ss.ckmeans(values, 5);
-
-            var breaks = clusters.map(function(cluster) {
-                return [cluster[0], cluster.pop()];
-            });
-
-            return breaks;
-        }
-
-        function getColor(d, breaks) {
-
-            if (d <= breaks[0][1]) {
-                return '#f1eef6';
-            } else if (d <= breaks[1][1]) {
-                return '#bdc9e1';
-            } else if (d <= breaks[2][1]) {
-                return '#74a9cf';
-            } else if (d <= breaks[3][1]) {
-                return '#2b8cbe'
-            } else if (d <= breaks[4][1]) {
-                return '#045a8d'
-            }
-        }
-
+     
+                  
     </script>
-
+    
 </body>
 
 </html>
