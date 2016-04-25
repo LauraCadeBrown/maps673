@@ -146,7 +146,7 @@
                     fillColor: 
                     getColor(layer.feature.properties['RENTER']/layer.feature.properties['OCCUPIED'], breaks)
                 });
-                layer.bindPopup('<b>' + layer.feature.properties['NAME'] + ' County<br></b>'+ (100*layer.feature.properties['RENTER']/layer.feature.properties['OCCUPIED']) + "% Are Renters").openPopup();
+                layer.bindPopup('<b>' + layer.feature.properties['NAME'] + ' County<br></b>'+ (100*layer.feature.properties['RENTER']/layer.feature.properties['OCCUPIED']).toLocaleString() + "% Are Renters");
             });
             
             drawLegend(breaks);
