@@ -106,31 +106,36 @@
          .info {
             padding: 6px 8px;
             font-size: 1em;
-            background: rgba(255,255,255,0.8);
+            background: rgba(75,75,75,0.8);
             box-shadow: 0 0 15px rgba(0,0,0,0.2);
             border-radius: 5px;
-            text-align: right;   
+            text-align: right;
+            color: whitesmoke
         }
         .info h3 {
-            margin: 0;   
+            margin: 0;
         }
         .leaflet-popup-content {
             max-width: 160px;   
+            
+            
     </style>
 </head>
 
 <body>
-    <h1>Map Title Goes Here</h1>
+    <h1>Kentucky Unemployment, 2000-2013</h1>
     
     <div id="map"></div>
-    <div id="ui-controls">
-        <label><span class="min">2001</span><span class="max">2013</span>
-        <input type="range" min = "2001", max= "2013", 
-               value = "2001", step= "1", class="year-slider"></input>
     
+    <div id="ui-controls">
+        
+        <label><span class="min">2000</span><span class="max">2013</span>
+        <input type="range" min = "2000", max= "2013", 
+               value = "2000", step= "1", class="year-slider"></input>
+        </label>
     </div>
         
-    
+
     
     
     <script>
@@ -146,6 +151,8 @@
         }
         var map = L.map('map', options);
         
+        
+        
         // load map tiles and add to map
         var tiles= L.tileLayer('http://{s}.tile.stamen.com/toner-background/{z}/{x}/{y}.{ext}', {
                 attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>', 
@@ -156,102 +163,104 @@
         });
         map.addLayer(tiles);
                 
-        // declare global variables
-        var dataLayer,
-                attribute = '2001';
+       
+        
+        //global variables
 
         // AJAX requests to load data files
-        $.getJSON('joinedKY.geojson', function(counties){
-               // console.log(counties);
-//                Papa.parse('ky-unemployment-data.csv', {
-//                    download : true,
-//                    header : true,
-//                    complete : function(data) {
-//                        
-//                        processData(counties, data);
-//                    }
-                dataLayer = L.geoJson(dataLayer, {     //styles map borders and add map to html document
-                 style: function(feature) {
-                    return {
-                            color: '#dddddd',
-                            weight: 2,
-                            fillOpacity: 1,
-                            fillColor: '#1f78b4'
-                        };
-                } 
-                
-            }).addTo(map);
         
-            createSliderUI();
-            drawLegend();
-            drawMap(counties);
-            drawInfo();
+        $.getJSON('ky-counties.json', function(counties){
+               //console.log(counties);
             
+            Papa.parse('ky-unemployment-data.csv', {
+                    download : true,
+                    header : true,
+                    complete : function(data) {
+                        processData(counties, data);
+                }
+            });
         });
         
         
-        // function to process/bind data
-//        function processData(counties,data) {
-//            
-//                for(var name in counties.features.properties[name]){
-//                    
-//                    var props= counties.features.properties[name];
-//                    
-//                    for(d in data.data) {
-//                        
-//                        if(props.name === data.data[d].name) {
-//                            counties.features.properties[name] = data.data[d];
-//                            break;
-//                        }
-//                            
-//                           
-//                    } //end of inner for loop
-//                } //end of outer for loop
-//            
+        
+        //function to process/bind data
+        function processData(counties, data) {
+            
+            for(var county in counties.features){
+                    
+                var props = counties.features[county].properties;
+                    
+                    for(d in data.data) {
+                        
+                        if(props.COUNTY_FIP === data.data[d].CNTY) {
+                            counties.features[county].properties= data.data[d];
+                            break;
+                            
+                            
+                        }
+                            
+                           
+                    } //end of inner for loop
+                } //end of outer for loop
             
             
-//        }
-
-        // function to draw the map
-        function drawMap(counties) {
+            createSliderUI();
+            drawLegend();
+            drawInfo();
+            drawMap(counties);
+            updateMap();
+        }
+        
+        
+        
+        //function to draw the map in the map
+        function drawMap(counties){
             
-            dataLayer=L.geoJson(counties, {
+            var dataLayer =L.geoJson(counties, {
+                
                 style: function(feature) {
-                     
+                   // console.log(feature);
                     return{
                         color: 'white',
                         weight: 1,
                         fillOpacity: 1,
                         fillColor: '#1f78b4'
-                    }
+                    };
                 }
             }).addTo(map);
             
-            dataLayer.on('mouseover', function() {  //creates a leaflet mouseover function to update the info box depending on the data category, also temporarily sets the style
-                    //updateInfo(this);
-                    dataLayer.setStyle({
-                        color: '#ffff00'
-                        });
-                    })    
-        
-          dataLayer.on('mouseout', function(){  //leaflet mouseout unhighlights the selected county
-                    dataLayer.setStyle({
-                        color: 'white'
-                    });
-                });
-            
-            dataLayer.on('mouseover', function() {   //this makes the info box appear when the state is moused over
-                    $(".info").show();
-                });
-                dataLayer.on('mouseout', function() {  ////this makes the info box disappear when the state is moused over
-                    $(".info").hide();    
-                
-             });
-            
-            updateMap()
-            updateInfo()
-            
         }
+            
+       
+        
+            
+       
+        
+        
+        
+            
+//            dataLayer.on('mouseover', function() {  //creates a leaflet mouseover function to update the info box depending on the data category, also temporarily sets the style
+//                    //updateInfo(this);
+//                    dataLayer.setStyle({
+//                        color: '#ffff00'
+//                        });
+//                    })    
+//        
+//          dataLayer.on('mouseout', function(){  //leaflet mouseout unhighlights the selected county
+//                    dataLayer.setStyle({
+//                        color: 'white'
+//                    });
+//                });
+//            
+//            dataLayer.on('mouseover', function() {   //this makes the info box appear when the state is moused over
+//                    $(".info").show();
+//                });
+//                dataLayer.on('mouseout', function() {  ////this makes the info box disappear when the state is moused over
+//                    $(".info").hide();    
+//                
+//             });
+//            
+       
         
         function drawInfo() {   //This creates the info box in right upper corner and creates a div
             var info = L.control({position: 'bottomright'});
@@ -270,12 +279,18 @@
             var breaks = getClassBreaks();
             
             dataLayer.eachLayer(function(layer) {
-                layer.setStyle( {
-                    fillColor: getColor(Number(layer.feature.properties[attribute]), breaks)
-                })
+                
+                var props = layer.feature.properties;
+                
+                var chlorColor= getColor(props[attribute], breaks); 
+                
+                layer.setStyle({
+                    fillColor: chloroColor
+                });
             });
             
         updateLegend(breaks);
+            createSliderUI();
             
         
            
@@ -332,15 +347,20 @@
                 
         // function to draw the legend
         function drawLegend() {
-             var legend = L.control({position: 'topright'});
+             var legend = L.control({
+                 position: 'bottomright'
+             });
 
-                legend.onAdd = function(map) {   //adds to map
+                legend.onAdd = function() {   //adds to map
 
                     var div = L.DomUtil.create('div', 'legend'); //creates an HTML div called legend
 
                     return div;
                 };
+            
             legend.addTo(map);
+            
+            drawInfo();
         } 
         
         
@@ -349,8 +369,13 @@
         function updateLegend(breaks) {
             
             var legend = $('.legend').html("<h3>% Unemployment: " + attribute + "</h3><ul>");  
-
-            for (var i = 0; i <= breaks.length-2; i++) { //for each break
+        
+            var labels= [];
+            
+            // update the legend title
+            legend.html("<h3>Unemployment Rate: " + attribute + "</h3>");
+            
+            for (var i = 0; i <= breaks.length-1; i++) { //for each break
 
                 var color = getColor(breaks[i + 1], breaks);  
                $('.legend ul').append('<li><span style="background:' + color + '"></span> ' + breaks[i] + ' &mdash; ' + breaks[i + 1] + '</li>');
@@ -366,7 +391,7 @@
         }
 
          //function to create the range slider
-        function createSliderUI() {
+    function createSliderUI() {
         
             var sliderControl = L.control({ position: 'bottomleft'});
             
@@ -379,17 +404,16 @@
                 });
                 
                 return slider;
-            }
-            
+                }
             sliderControl.addTo(map);
             
-            $('.year-slider')
+                $('.year-slider')
                 .on('input change', function(){
                 attribute = ($(this).val());
                 updateMap();
-            });
+                });
         
-        }
+        };
 
     </script>
     
