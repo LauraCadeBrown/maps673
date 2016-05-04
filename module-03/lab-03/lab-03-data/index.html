@@ -74,12 +74,18 @@
         }
         .legend li{
             height: 22px;
+            
         }
         .legend span {
             width: 30px;
             height: 20px;
             float: left;
-            margin-right: 10px 4px;
+            margin-right: 10px;
+        }
+        .legend li:after {
+            content: '';
+            display: block;
+            clear: both;
         }
         #ui-controls {
             width: 176px;
@@ -110,7 +116,9 @@
             box-shadow: 0 0 15px rgba(0,0,0,0.2);
             border-radius: 5px;
             text-align: right;
-            color: whitesmoke
+            color: whitesmoke;
+            width: 130px;
+           
         }
         .info h3 {
             margin: 0;
@@ -131,7 +139,7 @@
         
         <label><span class="min">2000</span><span class="max">2013</span>
         <input type="range" min = "2000", max= "2013", 
-               value = "2000", step= "1", class="year-slider"></input>
+               value = "2000", step= "1", class="year-slider">
         </label>
     </div>
         
@@ -274,11 +282,40 @@
                 layer.setStyle({
                     fillColor: gradient
                 });
+                
+                layer.bindPopup("<b>"+props.NAME+" County</b></br>" +
+                         "Unemployment Rate (" + attribute + "): " + props[attribute].toLocaleString() + "%");
+                
+                // highlights county upon hover
+                layer.on('mouseover', function () {
+                    updateInfo(this);
+                    layer.setStyle({
+                    color: "#ffeda0",
+                    weight: 5
+                    });
+                });
+                
+                // deselects when mouse is off
+                layer.on('mouseout', function () {
+                    layer.setStyle({
+                    color: '#ffffff',
+                    weight: 2
+                    });
+                });
+            });
+            // show the hover panel when the mouse is hovering over the map
+            dataLayer.on('mouseover', function () {
+                $(".info").show();
+            });
+            
+            // hide the hover panel when the mouse is not on the map
+            dataLayer.on('mouseout', function () {
+                $(".info").hide();
             });
             
             //calls to update legend and info boxes based on color gradient
-      updateLegend(breaks);
-       updateInfo();
+            updateLegend(breaks);
+      
             
         }
            
@@ -293,12 +330,7 @@
                 values.push(value);
                 
             });
-            
-//            values.sort(function(a,b) {
-//                return a - b;
-//                
-//            }); 
-//            console.log(values);
+
             
             var breaks = ss.quantile(values, [0, 0.125, .25, 0.375, 0.5, 0.625, 0.75, 0.875, 1]); //manually divides data into eight classes
             
@@ -348,71 +380,24 @@
                 }
          }
         
-         
-        
-        
-        
         
          //function to update the legend
         function updateLegend(breaks) {
             
             // update the legend title
             var legend = $('.legend').html("<h3>% Unemployment: " + attribute + "</h3><ul>");  
-        
-            
-            
-           
+
             for (var i = 0; i <= breaks.length-2; i++) { //for each break
 
                 var color = getColor(breaks[i + 1], breaks);  
-               $('.legend ul').append('<li><span style="background:' + color + ' "></span>  ' + 
-                                      " " + breaks[i] + ' &mdash; ' + breaks[i + 1] + '</li>');
+               $('.legend ul').append('<li><span style="background:' + color + ' "></span>  ' + " " + breaks[i].toLocaleString() + ' &mdash; ' + breaks[i + 1].toLocaleString() + '</li>');
         
             }
             legend.append("</ul>");    
         }
-        
-        
-        function updateInfo(){
+          
             
-            // for each county
-            dataLayer.eachLayer(function (layer) {
-                var props = layer.feature.properties;
-                var breaks = getClassBreaks();
-        
-                // clicking makes a popup
-                layer.bindPopup("<b>"+layer.feature.properties["NAME"]+" County</b></br>" +
-                         "Unemployment Rate (" + attribute + "): " + layer.feature.properties[attribute].toLocaleString() + "%");
-                
-                // highlights county upon hover
-                layer.on('mouseover', function () {
-                    updateInfo(this);
-                    layer.setStyle({
-                    color: "#ffeda0",
-                    weight: 5
-                    });
-                });
-                
-                // deselects when mouse is off
-                layer.on('mouseout', function () {
-                    layer.setStyle({
-                    color: '#ffffff',
-                    weight: 2
-                    });
-                });
-            });
-            // show the hover panel when the mouse is hovering over the map
-            dataLayer.on('mouseover', function () {
-                $(".info").show();
-            });
-            
-            // hide the hover panel when the mouse is not on the map
-            dataLayer.on('mouseout', function () {
-                $(".info").hide();
-            });
-            
-            
-             function updateInfo(layer) { //I have no idea why I have to have this second function here...if I don't "props" is not defined and it has bugs.
+        function updateInfo(layer) { 
             
             var props = layer.feature.properties;
             
@@ -435,14 +420,10 @@
         
             // add them to the box
             $(".info").html(html);
-                }
-        } 
-    
+        }
        
-       
-
          //function to create the range slider
-    function createSliderUI() {
+        function createSliderUI() {
         
             var sliderControl = L.control({ position: 'bottomleft'});
             
