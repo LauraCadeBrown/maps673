@@ -41,6 +41,9 @@
         .land{
             fill: #d3d3d3;
         }
+        .emitter {
+            fill: yellow;
+        }
     </style>
 </head>
 <body>
@@ -73,9 +76,10 @@
     queue ()
         .defer(d3.json, 'us-counties-topo.json')
         .defer(d3.json, 'na_land_clipped.json')
+        .defer(d3.csv, 'direct-emitters.csv')
         .await(makeMap);
     
-    function makeMap(error, counties, na){
+    function makeMap(error, counties, na, emitters){
         svg.append("g")
         .selectAll("path")
         .data(na.features)
@@ -101,10 +105,23 @@
           d3.select(this).attr('class', 'county');         
                       });
         
-        
-    
-    
-    }
+        svg.append("g")
+            .selectAll("circle")
+            .data(emitters)
+            .enter()
+            .append("circle")
+            .attr("cx", function(d) {
+            d.position = projection([d.lon, d.lat])
+            if (d.position) {return d.position[0];
+                            }
+        })
+        .attr("cy", function(d) {
+            if (d.position) {return d.position[1];
+                            }
+        })
+        .attr("r", 2)
+        .attr("class","emitter");
+        }
     
 </script>
 </body>
