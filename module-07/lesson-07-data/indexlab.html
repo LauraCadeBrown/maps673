@@ -18,7 +18,7 @@
         
         h1, h2 {
             position: absolute;
-        left: 20px;
+        left: 200px;
         top: 10px;
         font-size: 2em;
         font-weight: 100;
@@ -52,7 +52,7 @@
 <body>
   
     <div id= "map"></div>
-    <h1>US Counties</h1>
+    <h1>Cancer Rates per Counties</h1>
     <h2></h2>
     
     
@@ -79,7 +79,7 @@
         .projection(projection);
     
     queue ()
-        .defer(d3.json, "https://laura-cade-brown.cartodb.com/api/v2/sql?format=GeoJSON&q=SELECT * FROM uninsured_adults_county")
+        .defer(d3.json, "https://laura-cade-brown.cartodb.com/api/v2/sql?format=GeoJSON&q=SELECT * FROM cancer_deaths_merge")
         .defer(d3.json, 'na_land_clipped.json')
         .await(makeMap);
     
@@ -87,17 +87,15 @@
         
         
        
-        var breaks = ss.jenks(counties.features.map(function(d) { 
-            return d.properties.uninsured; 
-            }), 5);
+        var breaks = [148, 170, 192, 214, 376]
 
 
-       breaks.shift(); // remove min value from breaks Array before applying to domain
-        breaks.pop(); // same for max
+   //    breaks.shift(); // remove min value from breaks Array before applying to domain
+//        breaks.pop(); // same for max
 
-        console.log(breaks);
+       // console.log(breaks);
 
-        var colors = ["#feedde","#fdbe85","#fd8d3c","#e6550d","#a63603"];
+        var colors = ["#feedde", "#fdbe85","#fd8d3c","#e6550d","#a63603"];
 
         var jenks = d3.scale.threshold()
             .domain(breaks)
@@ -120,7 +118,8 @@
             .attr("class","county")
             .attr( "fill", function(d){
         // return some color here return based upon an attribute value  
-                return jenks(d.properties.uninsured); 
+                
+                return jenks(d.properties.rate); 
         });
         
 //            .on("mouseover", function(d){
