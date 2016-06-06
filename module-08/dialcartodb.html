@@ -134,21 +134,34 @@
 
     <script>
         var map = new L.Map("map", {
-        center: [-10,5],  // note that the coordinates are back to lat/lon
-        zoom: 4
+        center: [42.36,-71.06],  // note that the coordinates are back to lat/lon
+        zoom: 11
         });
         
-        var url = "https://laura-cade-brown.cartodb.com/api/v2/viz/c0692092-2c1e-11e6-8447-0e674067d321/viz.json";
+        var CartoDB_Positron = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="http://cartodb.com/attributions">CartoDB</a>',
+            subdomains: 'abcd',
+            maxZoom: 19
+        }).addTo(map);
         
-        cartodb.createLayer(map, url).addTo(map);
+ 
+        // THIS WORKS TO LOAD GeoJSON data and make LEAFLET MAP (easy and simple)
         
-        
+        $.getJSON('https://laura-cade-brown.cartodb.com/api/v2/sql?format=GeoJSON&q=SELECT * FROM census_race_percentages', function(data) {
+    
 
-//        var cartoCSS = '#census_race_percentages{'+
-//            'polygon-fill: steelblue;'+
-//            'polygon-opacity: 0.8;'+
-//            'polygon-comp-op: lighten;'+
-//            'line-color: #FFF;'+
+            L.geoJson(data).addTo(map); // and you can simply use that GeoJSON 
+                                                         // data to make a regular Leaflet map     
+        });
+        
+   
+        // OR YOU CAN GO THIS ROUTE with Carto.js ... NOT SURE WHY IT'S NOT
+        // WORKING
+
+//        var cartoCSS = '#census_race_percentages {'+
+//            'polygon-fill: #FFFFB2'+
+//            'polygon-opacity: 0.8'+
+//            'line-color: #FFF'+
 //            'line-width: 0.5;'+
 //            'line-opacity: 1;'+
 //            '}';
@@ -163,28 +176,18 @@
 //                    cartocss: cartoCSS
 //                }  
 //            ]
-//        }
+//        };
 //
-//        cartodb.createLayer(map, sourceObject).addTo(map);
-//        
-//        //url https://laura-cade-brown.cartodb.com/api/v2/viz/c0692092-2c1e-11e6-8447-0e674067d321/viz.json
-//        
-//        var map = L.map('map', {
-//            center: [ 0, 0],// 42.36, -71.06
-//            zoom: 4
-//            
-//        });
-//        
-//        cartodb.createLayer(map, "https://laura-cade-brown.cartodb.com/api/v2/viz/c0692092-2c1e-11e6-8447-0e674067d321/viz.json").addTo(map);
-//        
-//        $.getJSON('https://laura-cade-brown.cartodb.com/api/v2/sql?format=GeoJSON&q=SELECT * FROM census_race_percentages', function(data) {
-//        console.log(data); // you have access to the geojson data here!
-//
-//        L.geoJson(data).addTo(map); // and you can simply use that GeoJSON 
-//                                                         // data to make a regular Leaflet map     
-//});
-//// 
-//        
+//        cartodb.createLayer(map, sourceObject)
+//            .addTo(map)
+//            .on('done', function (l) {
+//                console.log(l)
+//            })
+//            .on('error', function (e) {
+//                console.log(e);
+//            });
+        
+       
     </script>
     
 </body>
