@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset=utf-8 />
+    <title>Comparative Demographics</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+
+    
+    <script src="https://code.jquery.com/jquery-1.12.2.min.js"></script>  
+<script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/simple-statistics/1.0.1/simple_statistics.js"></script>
+    <script src="http://libs.cartocdn.com/cartodb.js/v3/3.15/cartodb.js"></script>
+
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.css" />
+    <link href='http://fonts.googleapis.com/css?family=Lato' rel='stylesheet' type='text/css'>
+    
+
+    <style>    /* Sets styles and size for body, headings, legend, popup, info box, etc.; Script elements above prepare HTML document for interacting with Leaflet and Jquery functions and operations*/
+        body {
+            margin: 0;
+            padding: 0;
+            background: whitesmoke;
+            font-family: Lato, sans-serif;
+            color: #0D0000;
+        }
+        header {
+            width: 80%;
+            margin: 10px auto 10px auto;
+        }
+        h1 {
+            display: inline-block;
+            margin-right: 20px;
+            color: #001323;
+        }
+        h2 {
+            display: inline-block;
+            color: #001323;
+        }
+        #map {
+            width: 80%;
+            height: 540px;
+            margin: 10px 10%;
+            background: whitesmoke;
+            border: 2px solid #dddedf;
+        }
+        footer {
+            padding: 6px 10%;
+            width: 80%;
+        }
+        p {
+            font-size: 1em;
+            color: #001323;
+        }
+        .legend {
+            padding: 6px 8px;
+            font-size: 1em;
+            background: rgba(255,255,255,0.8);
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            border-radius: 5px;
+        }
+        .legend h3 {
+            font-size: 1.1em;
+            font-weight: normal;
+            color: #001323;
+            margin: 0 0 10px 0;
+        }
+        .legend span {
+            width: 20px;
+            height: 20px;
+            float: left;
+            margin: 0 10px 4px 0;
+        }
+        .legend label {
+            font-size: 1.1em;
+        }
+        .legend label:after {
+            content: '';
+            display: block;
+            clear: both;
+        }
+        .leaflet-popup-content {
+            max-width: 160px;   
+        }
+        #ui-controls {   
+            margin-left: 10%;
+        }
+        #ui-controls label {
+            font-size: 1em;
+            margin-right: 5px;
+        }
+        .info {
+            padding: 6px 8px;
+            font-size: 1em;
+            background: rgba(255,255,255,0.8);
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            border-radius: 5px;
+            text-align: right;   
+        }
+        .info h3 {
+            margin: 0;   
+        }
+        
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Comparative Demographics</h1>
+        <h2> Assessing BPS Lottery and Neighborhood Schools</h2>
+    </header>
+
+    
+    
+    <div id='ui-controls'> 
+        <label>Choose a race/ethnicity to display:</label>
+       <select id="occupied">
+            <option value="percent_black" selected>black</option>
+            <option value="percent_white">white</option> 
+            <option value="percent_asian">Asian</option>
+            <option value="percent_hispanic">Hispanic</option>
+           
+        </select>
+    </div> <!-- end ui-controls: the above set the selection scroll, the data it uses, and its label -->
+
+    <div id='map'></div>
+
+    <footer>
+        <p>Map authored by Laura Brown</p>
+        <p>Map Data from American Fact Finder(http://factfinder.census.gov/); 2010 Census, SF1.</p>
+        <p>This map compares school racial and ethnic demographics alongside neighborhood composition. 
+        </p>
+    </footer>
+
+    <script>
+        var map = new L.Map("map", {
+        center: [-10,5],  // note that the coordinates are back to lat/lon
+        zoom: 4
+        });
+        
+        var url = "https://laura-cade-brown.cartodb.com/api/v2/viz/c0692092-2c1e-11e6-8447-0e674067d321/viz.json";
+        
+        cartodb.createLayer(map, url).addTo(map);
+        
+        
+
+//        var cartoCSS = '#census_race_percentages{'+
+//            'polygon-fill: steelblue;'+
+//            'polygon-opacity: 0.8;'+
+//            'polygon-comp-op: lighten;'+
+//            'line-color: #FFF;'+
+//            'line-width: 0.5;'+
+//            'line-opacity: 1;'+
+//            '}';
+//
+//        
+//        var sourceObject = {
+//            user_name: 'laura-cade-brown',
+//            type: 'cartodb',
+//            sublayers: [
+//                {
+//                    sql: "SELECT * FROM census_race_percentages",
+//                    cartocss: cartoCSS
+//                }  
+//            ]
+//        }
+//
+//        cartodb.createLayer(map, sourceObject).addTo(map);
+//        
+//        //url https://laura-cade-brown.cartodb.com/api/v2/viz/c0692092-2c1e-11e6-8447-0e674067d321/viz.json
+//        
+//        var map = L.map('map', {
+//            center: [ 0, 0],// 42.36, -71.06
+//            zoom: 4
+//            
+//        });
+//        
+//        cartodb.createLayer(map, "https://laura-cade-brown.cartodb.com/api/v2/viz/c0692092-2c1e-11e6-8447-0e674067d321/viz.json").addTo(map);
+//        
+//        $.getJSON('https://laura-cade-brown.cartodb.com/api/v2/sql?format=GeoJSON&q=SELECT * FROM census_race_percentages', function(data) {
+//        console.log(data); // you have access to the geojson data here!
+//
+//        L.geoJson(data).addTo(map); // and you can simply use that GeoJSON 
+//                                                         // data to make a regular Leaflet map     
+//});
+//// 
+//        
+    </script>
+    
+</body>
+
+</html>

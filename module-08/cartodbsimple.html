@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>673 Module 08 CartoDB Starter Template</title>
+    
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+
+    <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/3.15/themes/css/cartodb.css" />
+    
+    <script src="http://libs.cartocdn.com/cartodb.js/v3/3.15/cartodb.js"></script>
+    
+    <style>
+      html, body, #map {
+        height: 100%;
+        padding: 0;
+        margin: 0;
+        background: #3d3d3d;
+        
+      }
+        #title {
+            position: absolute;
+            top: 10px;
+            left: 28%;
+            align-content: center;
+            text-align: center;
+            border-radius: 12px;
+            background: #3d3d3d;
+            color: ghostwhite;
+            padding: 0px 15px 0px 15px;
+            font-size: 1.5em;  
+
+        }
+        #description {
+            font-family: sans-serif;
+            position: absolute;
+            bottom: 90px;
+            left: 1%;
+            align-content: left;
+            text-align: left;
+            border-radius: 12px;
+            background: #3d3d3d;
+            color: ghostwhite;
+            width: 230px;
+            padding: 8px 15px 8px 15px;
+            font-size: 0.7em;
+        }
+        #legend {
+            background: #3d3d3d;
+            color: ghostwhite;
+            
+        }
+    </style>
+    
+</head>
+    
+<body>
+    
+    <div id="map"></div>
+    
+    <div id="title">
+    <h2>BPS School Performance Demographics</h2>
+    </div>
+    
+    <div id="description">
+        <p> Map by Laura Brown for New Maps Plus, 6/6/16
+            This map shows the correspondence between neighborhoods and school racial/ethnic demographics. Data from 2010 Census.
+            CRSL: Albers Equal Area (EPSG: 102008)
+        </p>
+    </div>
+
+        
+  <script type="infowindow/html" id="infowindow_template">
+        <div class="cartodb-popup v2">
+        <a href="#close" class="cartodb-popup-close-button close">x</a>
+            <div class="cartodb-popup-content-wrapper">
+               <div class="cartodb-popup-content">
+                <h4>County, State</h4>
+                <p>{{content.data.cancer_deaths_county}}, {{content.data.cancer_deaths_state}}</p>
+                <h4>Cancer Death Rate (per 100,000)</h4>
+                <p>{{content.data.cancer_deaths_rate}}</p>
+               </div>
+             </div>
+            <div class="cartodb-popup-tip-container"></div>
+          </div>
+        </script>
+        
+   <script type="cartocss/html" id="percentages-styles">
+   
+#census_race_percentages{
+  polygon-fill: #FFFFB2;
+  polygon-opacity: 0.8;
+  line-color: #FFF;
+  line-width: 0.5;
+  line-opacity: 1;
+}
+#census_race_percentages [ rate <= 100] {
+   polygon-fill: #BD0026;
+}
+#cancer_deaths_merge_merge [ rate <= 80] {
+   polygon-fill: #F03B20;
+}
+#cancer_deaths_merge_merge [ rate <= 60] {
+   polygon-fill: #FD8D3C;
+}
+#cancer_deaths_merge_merge [ rate <= 40] {
+   polygon-fill: #FECC5C;
+}
+#cancer_deaths_merge_merge [ rate <= 20] {
+   polygon-fill: #FFFFB2;
+}></script>
+
+    
+
+    
+    <script>
+            
+        var map = new L.Map("map", {
+            center: [-10, 5],  // note the map is centered closer to 0,0
+            zoom: 4.5,
+        });
+        
+         
+        
+    //    var url = 'https://laura-cade-brown.cartodb.com/api/v2/viz/8bed786c-971e-11e5-8d1f-0e31c9be1b51/viz.json';
+                
+        
+        //var url = 'https://laura-cade-brown.cartodb.com/api/v2/viz/7bd14018-2165-11e6-b102-0ecd1babdde5/viz.json';
+        
+        
+        
+//        var cartoCSS = "#uninsured_adults_county{"+
+//        "polygon-fill: steelblue;"+
+//        "polygon-opacity: 0.8;"+
+//        "polygon-comp-op: lighten;"+
+//        "line-color: #FFF;"+
+//        "line-width: 0.5;"+
+//        "line-opacity: 1;"+
+//            "}";
+        
+        
+
+        
+        var sourceObject = { 
+        user_name: 'laura-cade-brown',
+            type: 'cartodb',
+            sublayers: [
+//            {
+//                    sql: "SELECT ST_Transform(the_geom, 2163) AS the_geom_webmercator FROM na_grat_clipped",
+//                    cartocss: gratCartoCSS
+//            },{
+//                    sql: "SELECT ST_Transform(the_geom, 2163) AS the_geom_webmercator FROM na_land_clipped",
+//                    cartocss: landCartoCSS
+//            },
+                {
+                    sql: "SELECT ST_Transform(the_geom, 2163) AS the_geom_webmercator, cartodb_id, rate FROM census_race_percentages",
+                    cartocss: $("#percentages-styles").text()
+                }
+            ]
+            
+        
+        }
+        
+        cartodb.createLayer(map, sourceObject, {
+            infowindow: true})
+            
+        .addTo(map)
+        
+        .done(function(layer) {
+         var legend = new cdb.geo.ui.Legend({
+            type: "custom", 
+            title: "Race and Ethnic Makeup (%)",
+           data:  [
+                                    
+                                    { name: "80-100", value: "#BD0026" },
+                                    { name: "60-80", value: "#F03B20" },
+                                    { name: "40-60", value: "#FD8D3C" },
+                                    { name: "20-40", value: "#FECC5C" },
+                                    { name: "<20", value: "#FFFFB2" },
+                                    
+                                ]
+         });
+         $('#map').append(legend.render().el);
+           
+        
+        
+//        
+//    
+//        var sublayer = layer.getSubLayer(0);
+//                    
+//
+//         cartodb.vis.Vis.addInfowindow(map, sublayer,
+//                                    ['cancer_deaths_merge_merge_rate', 
+//                                      'cancer_deaths_merge_merge_county', 
+//                                      'cancer_deaths_merge_merge_state'],
+//
+//                                    {infowindowTemplate: $('#infowindow_template').text()}
+//                                    ) 
+                });
+   
+        
+//        $.getJSON('https://laura-cade-brown.cartodb.com/api/v2/sql?format=GeoJSON&q=SELECT * FROM uninsured_adults_county', function(data) {
+//        console.log(data); // you have access to the geojson data here!
+//
+//        L.geoJson(data).addTo(map); // and you can simply use that GeoJSON 
+//                                                         // data to make a regular Leaflet map     
+
+//................................................................................        
+
+    
+//       
+//    #uninsured_adults_county{
+//    polygon-fill: #FFFFB2;
+//    polygon-opacity: 0.8;
+//    line-color: #FFF;
+//    line-width: 0.5;
+//    line-opacity: 1;
+//    }
+//#uninsured_adults_county [ uninsured <= 52] {
+//   polygon-fill: #B10026;
+//}
+//#uninsured_adults_county [ uninsured <= 43] {
+//   polygon-fill: #E31A1C;
+//}
+//#uninsured_adults_county [ uninsured <= 36] {
+//   polygon-fill: #FC4E2A;
+//}
+//#uninsured_adults_county [ uninsured <= 30] {
+//   polygon-fill: #FD8D3C;
+//}
+//#uninsured_adults_county [ uninsured <= 23] {
+//   polygon-fill: #FEB24C;
+//}
+//#uninsured_adults_county [ uninsured <= 17] {
+//   polygon-fill: #FED976;
+//}
+//#uninsured_adults_county [ uninsured <= 10] {
+//   polygon-fill: #FFFFB2;
+//}
+  
+        
+        
+        
+        
+        //        cartodb.createVis('map', url,
+//                          {
+//            shareable: false,
+//            title: false,
+//            description: false,
+//            search: false,
+//            zoom: 4,
+//            cartodb_logo: false,  
+//            layer_selector: true, 
+//            fullscreen: false,    
+//        })
+//            .done(function(vis, layers) {
+//         
+
+//        console.log(vis, layers);
+//        console.log(vis.getLayers()); /// same as layers here
+//        console.log(vis.getOverlays()); /// same as layers here
+//
+//        var sublayer = layers[1]; // reference to the layers
+//
+//        console.log(layers[1].getSubLayerCount()) // the number of layers
+//
+//        sublayer.setInteraction(true); // set the interaction true on the layers
+//
+//        // retrieve specific information from various features of the layers
+//        sublayer.on('featureOver', function(e, latlng, pos, data) {
+//            console.log(e, latlng, pos, data);
+//        });
+//
+//        sublayer.setOpacity(1); // change the opacity of the layers
+        
+        
+
+//        sublayer.getSubLayer(0).hide();
+//        sublayer.getSubLayer(1).hide();  // select a specific sublayer of the
+//                                            // layers and hide it
+//});
+        
+        
+//        cartodb.createVis('map', url)
+//            .done(function(vis, layers) {
+//            var map = vis.getNativeMap(); // returns reference to the Leaflet map instance
+//        });
+//......................................................................................        
+    </script>
+</body>
+</html>
