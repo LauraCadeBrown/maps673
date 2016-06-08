@@ -6,13 +6,16 @@
     <title>Comparative Demographics</title>
     <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
 
-    
+            
+        
+
     <script src="https://code.jquery.com/jquery-1.12.2.min.js"></script>  
 <script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/simple-statistics/1.0.1/simple_statistics.js"></script>
     <script src="http://libs.cartocdn.com/cartodb.js/v3/3.15/cartodb.js"></script>
 
     <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.css" />
+    <link href='https://api.mapbox.com/mapbox.js/v2.2.4/mapbox.css' rel='stylesheet' />
     <link href='http://fonts.googleapis.com/css?family=Lato' rel='stylesheet' type='text/css'>
     
 
@@ -114,7 +117,7 @@
     
     <div id='ui-controls'> 
         <label>Choose a race/ethnicity to display:</label>
-       <select id="occupied">
+       <select id="race">
             <option value="percent_black" selected>black</option>
             <option value="percent_white">white</option> 
             <option value="percent_asian">Asian</option>
@@ -128,13 +131,13 @@
     <footer>
         <p>Map authored by Laura Brown</p>
         <p>Map Data from American Fact Finder(http://factfinder.census.gov/); 2010 Census, SF1.</p>
-        <p>This map compares school racial and ethnic demographics alongside neighborhood composition. 
+        <p>This map compares school racial and ethnic demographics and performance alongside neighborhood composition. 
         </p>
     </footer>
 
     <script>
         var map = new L.Map("map", {
-        center: [42.36,-71.06],  // note that the coordinates are back to lat/lon
+        center: [42.36,-71.106],  // note that the coordinates are back to lat/lon
         zoom: 11
         });
         
@@ -144,16 +147,83 @@
             maxZoom: 19
         }).addTo(map);
         
- 
+        var attribute = "percent_black";
+        
         // THIS WORKS TO LOAD GeoJSON data and make LEAFLET MAP (easy and simple)
         
         $.getJSON('https://laura-cade-brown.cartodb.com/api/v2/sql?format=GeoJSON&q=SELECT * FROM census_race_percentages', function(data) {
-    
-
-            L.geoJson(data).addTo(map); // and you can simply use that GeoJSON 
-                                                         // data to make a regular Leaflet map     
-        });
+            
+     dataLayer = L.geoJson(data, {     //styles map borders and add map to html document
+                 style: function(feature) {
+                    return {
+                            color: '#dddddd',
+                            weight: 1,
+                            fillOpacity: .2,
+                            fillColor: '#1f78b4'
+                        };
+                }          
+            }).addTo(map);
         
+        
+        drawMap();
+        buildUI();
+            
+        });
+
+//            L.geoJson(data).addTo(map); // and you can simply use that GeoJSON 
+//            
+
+        function drawMap() {
+            dataLayer.eachLayer(function(layer) { 
+          // console.log(layer.feature.properties);
+             var props = layer.feature.properties;   //abbreviates property chain
+               
+                var originalColor = getColor(props[attribute]);  //sets the original/return color
+                
+                layer.setStyle({   //leaflet function to set the style of the counties to that determined by color breaks
+                    fillColor: originalColor,
+                    fillOpacity: .6
+                    });   
+            });
+        }
+        
+       
+       function getColor(d) { //defines the colors of each break, uses if/else statments to test the data value
+            
+            if(d <= 20) {
+                return '#f1eef6';
+            } else if(d <= 40) {
+                return '#bdc9e1';
+            } else if(d <= 60) {
+                return '#74a9cf';
+            } else if(d <= 80) {
+                return '#2b8cbe'
+            } else if(d <= 100) {
+                return '#045a8d'
+            }
+        }
+        
+         
+         function buildUI() {   //builds a selection will, using jquery to complete the change from one data layer to another
+                $('select[id="race"]').change(function() {
+                
+                 attribute = $(this).val();  //jquery to control the selected attribute/ this switches data to what the user inputs
+                console.log(this);
+                   drawMap(); //redraws map according to selection
+
+
+                });
+              }
+     
+        
+    
+        
+//         $.getJSON('https://laura-cade-brown.cartodb.com/api/v2/sql?format=GeoJSON&q=SELECT * FROM bps_data'function(data) {
+//             points = L.geoJson(data, {
+//                 
+//                
+//             }
+//             ).addTo(map);
    
         // OR YOU CAN GO THIS ROUTE with Carto.js ... NOT SURE WHY IT'S NOT
         // WORKING
