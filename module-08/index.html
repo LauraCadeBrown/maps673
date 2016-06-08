@@ -155,7 +155,7 @@
          
          
             drawMap(raceData, bpsData);
-            buildUI();
+            
 
          });
 
@@ -177,21 +177,30 @@
             }          
         }).addTo(map);
         
-        dataLayer.eachLayer(function(layer) { 
-      // console.log(layer.feature.properties);
-         var props = layer.feature.properties;   //abbreviates property chain
 
-            var originalColor = getColor(props[attribute]);  //sets the original/return color
-
-            layer.setStyle({   //leaflet function to set the style of the counties to that determined by color breaks
-                fillColor: originalColor,
-                fillOpacity: .6
-                });   
-        });
         
         
         // then draw your points layer
         L.geoJson(bpsData).addTo(map);
+        
+        buildUI();
+    }
+    
+    function updateMap() {
+        
+      dataLayer.eachLayer(function(layer) { 
+      
+        var props = layer.feature.properties;   //abbreviates property chain
+
+        var originalColor = getColor(props[attribute]);  //sets the original/return color
+
+        layer.setStyle({   //leaflet function to set the style of the counties to that determined by color breaks
+            fillColor: originalColor,
+            fillOpacity: .6
+            });   
+        });
+        
+        
     }
 
 
@@ -218,7 +227,7 @@
 
          attribute = $(this).val();  //jquery to control the selected attribute/ this switches data to what the user inputs
         console.log(this);
-           drawMap(); //redraws map according to selection
+           updateMap(); //redraws map according to selection
 
 
         });
