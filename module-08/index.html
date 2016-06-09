@@ -143,11 +143,12 @@
     }).addTo(map);
 
     var attribute = "percent_black",
-        dataLayer,
-        pointsLayer;
+        dataLayer;
 
     // FIRST LOAD YOUR DATA
 
+    
+    
     $.getJSON('https://laura-cade-brown.cartodb.com/api/v2/sql?format=GeoJSON&q=SELECT * FROM census_race_percentages', function(raceData) {
         
         
@@ -155,30 +156,89 @@
          
          
             drawMap(raceData, bpsData);
-            buildUI();
-
-         });
+            
+             
+             });
+        
 
     });  // done loading data
        
-
+    
+    
+    
     function drawMap(raceData, bpsData) {
         
         // first draw your polygons layer
-        dataLayer = L.geoJson(raceData, {     
+            dataLayer = L.geoJson(raceData, {     
              //styles map borders and add map to html document
-             style: function(feature) {
-                return {
-                        color: '#dddddd',
-                        weight: 1,
-                        fillOpacity: .2,
-                        fillColor: '#1f78b4'
-                    };
-            }          
-        }).addTo(map);
+                    style: function(feature) {
+                        return {
+                            color: '#dddddd',
+                            weight: 1,
+                            fillOpacity: .2,
+                            fillColor: '#1f78b4'
+                        };
+                    }          
+            }).addTo(map);
+       
         
-        dataLayer.eachLayer(function(layer) { 
-      // console.log(layer.feature.properties);
+            var schools = L.geoJson(bpsData, {
+                    pointToLayer: function(feature, layer) {
+                      
+                        return L.circleMarker(layer, {
+                            radius: calcRadius(Number(feature.properties.percent_white)),
+                            opacity: 1,
+                            weight: 2,
+                            color: levelColor(feature.properties.level),
+                            fillOpacity: 0,
+                            fillColor: "#d72b13",
+                            
+                            
+                        
+                    });
+                                    
+
+                    }
+                
+        }).addTo(map);
+            
+//            
+//            var schoolLevel = L.circle(bpsData, 3);
+//            schoolLevel.addTo(map);       
+//        
+        
+        buildUI();
+        
+        
+        
+    }
+//         function colorLevel(bpsData){
+//             
+//             var bpsData = L.geoJson(bpsData, {
+//                pointToLayer: function(feature, layer){
+//                    
+//                    //var originalLevel = layerColor(props[level]);
+//                    
+//                    return L.circleMarker(layer, {
+//                        radius: 3,
+//                        fillColor: "smokescreen",
+//                        
+//                    });
+//                }
+//             }).addTo(map);
+        
+     function calcRadius(val){
+         var radius = Math.sqrt(val/Math.PI);
+         return radius * .6
+     }       
+        
+    
+    function updateMap(){
+        
+        
+           dataLayer.eachLayer(function(layer) { 
+      
+               
          var props = layer.feature.properties;   //abbreviates property chain
 
             var originalColor = getColor(props[attribute]);  //sets the original/return color
@@ -186,15 +246,45 @@
             layer.setStyle({   //leaflet function to set the style of the counties to that determined by color breaks
                 fillColor: originalColor,
                 fillOpacity: .6
-                });   
-        });
-        
+                });  
+           });
+               
+//            dataLayer.eachLayer(function(layer){
+//                
+//               
+//                var schoolLevel = levelColor(layer.feature.properties.level);
+//                console.log(schoolLevel);
+//                
+//                layer.setStyle({
+//                    fillColor: schoolLevel,
+//                    fillOpacity: 1
+//                });
+//            });
+               
+        }
+       
         
         // then draw your points layer
-        L.geoJson(bpsData).addTo(map);
-    }
+//        var bpsData = L.geoJson(bpsData, {
+//                pointToLayer: function(feature, layer){
+//                    
+//                    var originalLevel = layerColor(props[level]);
+//                    
+//                    return L.circleMarker(layer, {
+//                        radius: 3,
+//                        fillColor: "smokescreen",
+//                     
+//                    })
+    
+    //}
+       
+    
+        
 
+    
 
+ 
+    
    function getColor(d) { //defines the colors of each break, uses if/else statments to test the data value
 
         if(d <= 20) {
@@ -210,15 +300,29 @@
         }
     }
 
+    function levelColor(d){
+    
+    
+          if(d <= 1) {
+            return 'green';
+           } else if(d <= 2) {
+           return 'yellow';
+            } else if(d <= 3) {
+             return 'orange';
+            } else if(d <= 5) {
+              return 'red';        
+        
+                            }
+    }
 
-     function buildUI() {   
+     function buildUI(raceData, bpsData) {   
          //builds a selection will, using jquery to complete the change from one data layer to another
          
         $('select[id="race"]').change(function() {
 
          attribute = $(this).val();  //jquery to control the selected attribute/ this switches data to what the user inputs
-        console.log(this);
-           drawMap(); //redraws map according to selection
+        
+           updateMap(); //redraws map according to selection
 
 
         });
