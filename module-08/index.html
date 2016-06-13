@@ -18,9 +18,9 @@
         body {
             margin: 0;
             padding: 0;
-            background: whitesmoke;
+            background: #a6bddb;
             font-family: Lato, sans-serif;
-            color: #0D0000;
+            color: black;
         }
         header {
             width: 80%;
@@ -37,7 +37,7 @@
         }
         #map {
             width: 80%;
-            height: 540px;
+            height: 700px;
             margin: 10px 10%;
             background: whitesmoke;
             border: 2px solid #dddedf;
@@ -86,6 +86,7 @@
         #ui-controls label {
             font-size: 1em;
             margin-right: 5px;
+            color: white;
         }
         .info {
             padding: 6px 8px;
@@ -98,6 +99,14 @@
         .info h3 {
             margin: 0;   
         }
+        .legend .circle {
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        margin-top: 8px;
+        stroke: "black";
+        stroke-width: 4;
+        }
         
     </style>
 </head>
@@ -105,7 +114,7 @@
 <body>
     <header>
         <h1>Comparative Demographics</h1>
-        <h2> Assessing BPS Lottery and Neighborhood Schools</h2>
+        <h2> Assessing BPS School and Neighborhood Demographics</h2>
     </header>
 
     
@@ -113,7 +122,8 @@
     <div id='ui-controls'> 
         <label>Choose a race/ethnicity to display:</label>
        <select id="race">
-            <option value="percent_black" selected>black</option>
+            <option value="blank" selected>none</option>
+           <option value="percent_black" selected>black</option>
             <option value="percent_white">white</option> 
             <option value="percent_asian">Asian</option>
             <option value="percent_hispanic">Hispanic</option>
@@ -126,20 +136,24 @@
     <footer>
         <p>Map authored by Laura Brown</p>
         <p>Map Data from American Fact Finder(http://factfinder.census.gov/); 2010 Census, SF1.</p>
-        <p>This map compares school racial and ethnic demographics and performance alongside neighborhood composition. 
+        <p>This map compares school racial and ethnic demographics and performance alongside neighborhood composition. The three concentric circles compare various indices of school health: tier (academic performance as determined by MCAS testing); level (an assessment that measures how well the performance gap between groups is being narrowed); diversity index (Shannon Index) as to measure level of integration of school. All circles are categorized by quartiles: yellow for top 25% of BPS schools, red for bottom 25% of BPS school. Level and Tier information provided by 2015 Accountability Reports and BPS data (http://profiles.doe.mass.edu/state_report/accountability.aspx). School profiles can be found at (http://www.bostonpublicschools.org/Page/628)
         </p>
     </footer>
 
+
+    
 <script>
     var map = new L.Map("map", {
-    center: [42.36,-71.106],  // note that the coordinates are back to lat/lon
-    zoom: 11
+    center: [42.314,-71.0879],  // note that the coordinates are back to lat/lon
+    zoom: 12
     });
 
+
+    
     var CartoDB_Positron = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="http://cartodb.com/attributions">CartoDB</a>',
         subdomains: 'abcd',
-        maxZoom: 19
+        minZoom: 11
     }).addTo(map);
 
     var attribute = "percent_black",
@@ -156,6 +170,7 @@
          
          
             drawMap(raceData, bpsData);
+          
             
              
              });
@@ -167,7 +182,8 @@
     
     
     function drawMap(raceData, bpsData) {
-        
+            
+                
         // first draw your polygons layer
             dataLayer = L.geoJson(raceData, {     
              //styles map borders and add map to html document
@@ -178,38 +194,85 @@
                             fillOpacity: .2,
                             fillColor: '#1f78b4'
                         };
+            
                     }          
             }).addTo(map);
        
-        
-            var schools = L.geoJson(bpsData, {
+
+                              
+
+           var schoolsLevel = L.geoJson(bpsData, {
                     pointToLayer: function(feature, layer) {
                       
                         return L.circleMarker(layer, {
-                            radius: calcRadius(Number(feature.properties.percent_white)),
+                            radius: 6,
                             opacity: 1,
-                            weight: 2,
+                            weight: 4,
+                           fillOpacity: 1,
                             color: levelColor(feature.properties.level),
+                            fillColor: diversityColor(feature.properties.diversity),
+                            clickable: true,
+                        
+                    });
+                     
+                    }
+            
+                                            
+        }).addTo(map); 
+        
+       
+        
+    
+        
+       
+        
+          var schoolsTier = L.geoJson(bpsData, {
+                    pointToLayer: function(feature, layer) {
+                      
+                        return L.circleMarker(layer, {
+                            radius: 10,
+                            opacity: 2,
+                            weight: 5,
                             fillOpacity: 0,
-                            fillColor: "#d72b13",
+                            color: tierColor(feature.properties.tier),
+                            clickable:true,
                             
                             
                         
                     });
-                                    
 
-                    }
-                
-        }).addTo(map);
+              }
+          
+        }).addTo(map); 
+        
+        schoolsTier.eachLayer(function(layer){
+            var props = layer.feature.properties;
+            layer.bindPopup("<b>"+props["name"]+" Elementary School</b></br>" + 
+                            "<b>Black: "+ props["percent_black"]+"%</b></br>"+
+                           "<b>White: "+ props["percent_white"]+"%</b></br>"+
+                           "<b>Asian: "+ props["percent_asian"]+"%</b></br>"+
+                           "<b>Hispanic: "+ props["percent_hispanic"]+"%</b></br>"+
+                           "<b>Low Income: "+ props["low_income"]+"%</b></br>")
             
+//            layer.on('mouseover', function() {
+//                    updateInfo(this);
+//                    
+//                });
+//                
+//                dataLayer.on('mouseover', function() {
+//                    $(".info").show();
+//                });
+//                dataLayer.on('mouseout', function() {
+//                    $(".info").hide();    
+//                });
 //            
-//            var schoolLevel = L.circle(bpsData, 3);
-//            schoolLevel.addTo(map);       
-//        
+        });
+  
+    
         
         buildUI();
-        
-        
+        drawLegend();
+      //  drawInfo();
         
     }
 //         function colorLevel(bpsData){
@@ -226,10 +289,32 @@
 //                    });
 //                }
 //             }).addTo(map);
-        
+     
+//    function drawInfo() {
+//            var info = L.control({position: 'topright'});
+//            info.onAdd = function(map) {
+//                var div = L.DomUtil.create('div', 'info');
+//                return div;  
+//        }
+//         info.addTo(map);
+//        
+            
+       // }
+    
+//    function updateInfo(bpsData) {
+//        var props = layer.feature.properties;
+//        var html = "<h3>"+props['nAME']+" School</h3>"+
+//                "Black: <b>"+ props["percent_black"]+"</b><br>"+
+//                "White: <b>"+ props["percent_white"]+"</b><br>"+
+//                "Asian: <b>"+ props["percent_asian"]+"</b><br>"+
+//                "Hispanic: <b>"+ props["percent_hispanic"]+"</b>"
+//        $(".info").html(html);
+//        }
+//                        
      function calcRadius(val){
          var radius = Math.sqrt(val/Math.PI);
-         return radius * .6
+         return radius * 2
+         
      }       
         
     
@@ -287,34 +372,75 @@
     
    function getColor(d) { //defines the colors of each break, uses if/else statments to test the data value
 
-        if(d <= 20) {
+        if(d <= 15) {
             return '#f1eef6';
-        } else if(d <= 40) {
-            return '#bdc9e1';
+        } else if(d <= 30) {
+            return '#d0d1e6';
+        } else if(d <= 45) {
+            return '#a6bddb';
         } else if(d <= 60) {
             return '#74a9cf';
-        } else if(d <= 80) {
-            return '#2b8cbe'
-        } else if(d <= 100) {
-            return '#045a8d'
+        } else if(d <= 75) {
+            return '#045a8d';
         }
-    }
+       else if(d <= 100) {
+            return '#045a8d';
+        }
+       
+    } 
 
     function levelColor(d){
     
     
           if(d <= 1) {
-            return 'green';
+            return '#ffff00';
            } else if(d <= 2) {
-           return 'yellow';
+           return '#ffbf00';
             } else if(d <= 3) {
-             return 'orange';
+             return '#ff8000';
             } else if(d <= 5) {
-              return 'red';        
+              return '#ff4000';        
         
                             }
     }
-
+    
+    function tierColor(d){
+    
+    
+            if(d <= 6) {
+            return '#ff4000';
+           } else if(d <= 16) {
+           return '#ff8000';
+            } else if(d <= 30) {
+             return '#ffbf00';
+            } else if(d <= 100) {
+              return '#ffff00';        
+        
+                            }
+    }
+    
+    function diversityColor(d){
+        
+        if(d <= .74) {
+            return '#ff4000';
+           } else if(d <= .98) {
+           return '#ff8000';
+            } else if(d <= 1.16) {
+             return '#ffbf00';
+            } else if(d <=1.34) {
+              return '#ffff00';  
+        }
+    }
+    
+//    if(d <= .74) {
+//            return '#c51b8a';
+//           } else if(d <= .98) {
+//           return '#f768a1';
+//            } else if(d <= 1.16) {
+//             return '#fbb4b9';
+//            } else if(d <=1.34) {
+//              return '#feebe2'; 
+    
      function buildUI(raceData, bpsData) {   
          //builds a selection will, using jquery to complete the change from one data layer to another
          
@@ -328,10 +454,122 @@
         });
     }
 
+function drawLegend() {
+            // create a new Leaflet control object, and position it top left
+            var legend = L.control({
+                position: 'topleft'
+            });
+            // when the legend is added to the map
+            legend.onAdd = function() {
+                // create a new HTML <div> element and give it a class name of "legend"
+                
+                var breaks = [20, 40, 60, 80, 100];
+                
+                var color= getColor(breaks);
+                
+                var div = L.DomUtil.create('div', 'legend');
+                // first append an <h3> tag to the div holding the current attribute
+                // and norm values (i.e., the mapped phenomena)
+                div.innerHTML = "<h3>" + "Percent of Population" + "</h3>";
+                // for each of our breaks
+            
+                div.innerHTML +=
+                        '<span style="background:' + "#f1eef6" + '"></span> ' +
+                        '<label>' + 0+ ' &mdash; ' +
+                        15 + '</label>';
+                
+               div.innerHTML +=
+                        '<span style="background:' + '#d0d1e6' + '"></span> ' +
+                        '<label>' + 15 + ' &mdash; ' +
+                        30 + '</label>';
+                
+                div.innerHTML +=
+                        '<span style="background:' + '#a6bddb' + '"></span> ' +
+                        '<label>' + 30 + ' &mdash; ' +
+                        45 + '</label>';
+                
+                div.innerHTML +=
+                        '<span style="background:' + '#74a9cf' + '"></span> ' +
+                        '<label>' + 45 + ' &mdash; ' +
+                        60 + '</label>';
+                
+                div.innerHTML +=
+                        '<span style="background:' + '#2b8cbe' + '"></span> ' +
+                        '<label>' + 60 + ' &mdash; ' +
+                        75 + '</label>';
+                div.innerHTML +=
+                        '<span style="background:' + '#045a8d' + '"></span> ' +
+                        '<label>' + 75 + ' &mdash; ' +
+                        100 + '</label>';
+                
+                div.innerHTML += 
+                   
+                        '<label>'+ " School Assessment"  + "<label>";
+                
+                div.innerHTML += 
+                        '<span class="circle" style="background:' + "gray" + '"></span> ' +
+                
+                        '<label>'+ " (outer) Tier/Level/Diversity (inner)" + "<label>";
+                
+                div.innerHTML+=
+                    '<span style="background:' + '#ffff00' + '"></span> ' +
+                        '<label>' + "Tier 1" + ' &mdash; ' + "Level 1 " + ' &mdash; '
+                        +"High" + '</label>';
+                div.innerHTML+=
+                    '<span style="background:' + '#ffbf00' + '"></span> ' +
+                        '<label>' + "Tier 2" + ' &mdash; ' + "Level 2 " + ' &mdash; '
+                        +"Moderate" + '</label>';
+                div.innerHTML+=
+                    '<span style="background:' + '#ff8000' + '"></span> ' +
+                        '<label>' +  "Tier 3" + ' &mdash; ' + "Level 3 " + ' &mdash; '
+                        +"Fair" + '</label>';
+                div.innerHTML+=
+                    '<span style="background:' + '#ff4000' + '"></span> ' +
+                        '<label>' + "Tier 4/5" + ' &mdash; ' + "Level 4 " + ' &mdash; '
+                        +"Poor" + '</label>';
+                
+               
+        
+                
+               
+                    
+                return div;
+                
+           
+            };
+            // add the legend to the map
+            legend.addTo(map);
+            
+        }
 
+//function drawCircleLegend(){
+//    var circleLegend=$('.circlechart');
+//    
+//    var radius = [10, 6, 4];
+//    
+//    var circles= {
+//        max: 10,
+//        median: 6,
+//        min: 4
+//    }
+//    
+//    var svgCircles= '';
+//    
+//     <svg height="100" width="100">
+//                <circle cx="10" cy="10" r="10" stroke="black" stroke-width="2" fill="red"/>
+//                </svg>
+//    }
+////
+////    for (var circle in circles) {
+////
+////        svgCircles += '<circle cx="'+ 100 +'" cy="'+ (circles[circle] - 180) * -1 +'" r="'+ circles[circle] +'" stroke="#d3d3d3" stroke-width="1" fill="ghostwhite" />';
+////
+////        svgCircles += '<text x="'+ 80 +'" y = "'+ (circles[circle] - 160) * -1 +'" fill= "green">'+ 4(circles[circle]) +'</text>'
+////    }
+////
+////    circleLegend.html(svgCircles)
 
-
-   
+//}
 
 </script>
     
